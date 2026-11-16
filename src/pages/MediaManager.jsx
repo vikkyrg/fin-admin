@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Upload, Trash2, Image, FileText, CheckCircle2 } from 'lucide-react';
-import { contentService } from '../services/api';
+import api, { contentService } from '../services/api';
 
 const MediaManager = () => {
   const [media, setMedia] = useState([]);
@@ -79,7 +79,7 @@ const MediaManager = () => {
             <div key={item._id} className="bg-white rounded-xl p-3 border border-slate-200 shadow-sm flex flex-col justify-between">
               <div className="h-24 bg-slate-50 rounded-lg flex items-center justify-center overflow-hidden mb-2">
                 {item.mimeType?.startsWith('image') ? (
-                  <img src={`http://localhost:5000${item.filePath}`} alt={item.originalName} className="object-cover h-full w-full" />
+                  <img src={new URL(item.filePath, new URL(api.defaults.baseURL, window.location.origin).origin).href} alt={item.originalName} className="object-cover h-full w-full" />
                 ) : (
                   <FileText className="w-8 h-8 text-slate-400" />
                 )}

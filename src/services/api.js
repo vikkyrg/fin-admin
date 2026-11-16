@@ -1,7 +1,21 @@
 import axios from 'axios';
 
+const configuredApiBaseUrl = import.meta.env.VITE_API_BASE_URL?.trim();
+let apiRoot = configuredApiBaseUrl;
+
+if (!apiRoot && import.meta.env.DEV) {
+  apiRoot = 'http://localhost:5000/api';
+}
+
+if (!apiRoot) {
+  throw new Error('VITE_API_BASE_URL must be configured for the production admin build.');
+}
+
+apiRoot = apiRoot.replace(/\/+$/, '');
+const apiBaseUrl = /\/api$/i.test(apiRoot) ? apiRoot : `${apiRoot}/api`;
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api',
+  baseURL: apiBaseUrl,
   timeout: 15000,
   headers: {
     'Content-Type': 'application/json',
