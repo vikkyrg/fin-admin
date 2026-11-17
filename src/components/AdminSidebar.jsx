@@ -1,205 +1,255 @@
-import React, { useState } from 'react';
-import { NavLink, Link, useNavigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { NavLink, Link } from 'react-router-dom';
 import { 
-  LayoutDashboard, Globe, FileText, HelpCircle, Newspaper, 
-  Image, Settings, LogOut, ChevronDown, ChevronRight, 
-  UserCheck, TrendingUp, Briefcase, Home, Building2, GraduationCap, 
-  Coins, Layers, ShieldCheck, ExternalLink, BookmarkCheck
+  LayoutDashboard, MessageSquare, Layers, Settings, 
+  LogOut, ChevronDown, ChevronRight, UserCheck, TrendingUp, Briefcase, 
+  Home, Building2, GraduationCap, Coins, CarFront, ExternalLink, X,
+  ChevronLeft
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useNotifications } from '../context/NotificationContext';
+import NotificationBadge from './NotificationBadge';
 
-const AdminSidebar = () => {
+const AdminSidebar = ({ collapsed, setCollapsed, mobileOpen, setMobileOpen }) => {
   const { admin, logout } = useAuth();
-  const [enquiriesOpen, setEnquiriesOpen] = useState(true);
-  const [websiteOpen, setWebsiteOpen] = useState(false);
-  const [loansOpen, setLoansOpen] = useState(false);
+  const { unreadCounts } = useNotifications();
+  const [enquiriesOpen, setEnquiriesOpen] = React.useState(true);
+  const [loansOpen, setLoansOpen] = React.useState(false);
 
   const ENQUIRY_LINKS = [
-    { name: 'Personal Loan', path: '/admin/enquiries/personal-loan', icon: UserCheck },
-    { name: 'Loan Against Securities', path: '/admin/enquiries/loan-against-securities', icon: TrendingUp },
-    { name: 'Business Loan', path: '/admin/enquiries/business-loan', icon: Briefcase },
-    { name: 'Home Loan', path: '/admin/enquiries/home-loan', icon: Home },
-    { name: 'Loan Against Property', path: '/admin/enquiries/loan-against-property', icon: Building2 },
-    { name: 'Education Loan', path: '/admin/enquiries/education-loan', icon: GraduationCap },
-    { name: 'Gold Loan', path: '/admin/enquiries/gold-loan', icon: Coins },
+    { name: 'Personal Loan', slug: 'personal-loan', path: '/admin/enquiries/personal-loan', icon: UserCheck },
+    { name: 'Loan Against Securities', slug: 'loan-against-securities', path: '/admin/enquiries/loan-against-securities', icon: TrendingUp },
+    { name: 'Business Loan', slug: 'business-loan', path: '/admin/enquiries/business-loan', icon: Briefcase },
+    { name: 'Home Loan', slug: 'home-loan', path: '/admin/enquiries/home-loan', icon: Home },
+    { name: 'Loan Against Property', slug: 'loan-against-property', path: '/admin/enquiries/loan-against-property', icon: Building2 },
+    { name: 'Education Loan', slug: 'education-loan', path: '/admin/enquiries/education-loan', icon: GraduationCap },
+    { name: 'Gold Loan', slug: 'gold-loan', path: '/admin/enquiries/gold-loan', icon: Coins },
+    { name: 'Vehicle Loan', slug: 'vehicle-loan', path: '/admin/enquiries/vehicle-loan', icon: CarFront },
   ];
 
+  const totalLoanUnread = ENQUIRY_LINKS.reduce((sum, link) => sum + (unreadCounts[link.slug] || 0), 0);
+
+  const closeMobile = () => {
+    if (setMobileOpen) setMobileOpen(false);
+  };
+
+  useEffect(() => {
+    if (mobileOpen) {
+      document.body.style.overflow = 'hidden';
+      const handleKeyDown = (e) => {
+        if (e.key === 'Escape') closeMobile();
+      };
+      window.addEventListener('keydown', handleKeyDown);
+      return () => {
+        document.body.style.overflow = '';
+        window.removeEventListener('keydown', handleKeyDown);
+      };
+    } else {
+      document.body.style.overflow = '';
+    }
+  }, [mobileOpen]);
+
+  // Sidebar item styling following typography spec: 14-15px, weight 500
+  const navItemClass = (isActive) => `
+    flex items-center justify-between px-3.5 py-2.5 rounded-lg transition-all text-[14px] font-medium group min-h-[42px]
+    ${isActive 
+      ? 'bg-[#194B87] text-white font-semibold shadow-sm border-l-[3px] border-[#F7901E]' 
+      : 'text-slate-300 hover:text-white hover:bg-white/5'}
+    ${collapsed ? 'lg:justify-center lg:px-2' : ''}
+  `;
+
   return (
-    <aside className="w-64 bg-brand-blue text-slate-200 min-h-screen flex flex-col flex-shrink-0 border-r border-brand-blueDark font-['Plus_Jakarta_Sans',sans-serif]">
-      
-      {/* Brand Header */}
-      <div className="h-16 px-5 border-b border-white/10 flex items-center justify-between">
-        <Link to="/admin/dashboard" className="flex items-center space-x-2.5">
-          <div className="w-8 h-8 rounded-lg bg-brand-white text-brand-blue flex items-center justify-center font-extrabold text-sm shadow">
-            FA
-          </div>
-          <div>
-            <span className="font-bold text-brand-white text-base tracking-tight">FinAdvise</span>
-            <span className="ml-1 text-[10px] uppercase font-bold text-brand-orange bg-orange-500/20 px-1 py-0.5 rounded">Admin</span>
-          </div>
-        </Link>
-        <a 
-          href="http://localhost:5173" 
-          target="_blank" 
-          rel="noreferrer" 
-          title="Visit Public Website"
-          className="text-blue-200 hover:text-brand-orange p-1 rounded transition"
-        >
-          <ExternalLink className="w-4 h-4" />
-        </a>
-      </div>
+    <>
+      {/* Mobile Backdrop */}
+      {mobileOpen && (
+        <div 
+          onClick={closeMobile} 
+          className="fixed inset-0 bg-slate-950/70 backdrop-blur-xs z-40 lg:hidden animate-in fade-in duration-200"
+          aria-hidden="true"
+        />
+      )}
 
-      {/* Nav List */}
-      <div className="flex-1 overflow-y-auto px-3 py-4 space-y-1.5 text-xs font-semibold">
+      {/* Main Sidebar Drawer */}
+      <aside className={`
+        fixed lg:sticky top-0 left-0 h-screen z-50 flex flex-col flex-shrink-0
+        bg-[#102D50] text-slate-200 border-r border-[#0A1E36]
+        transition-all duration-300 ease-in-out font-['Plus_Jakarta_Sans',sans-serif]
+        w-[280px] lg:w-[260px] ${collapsed ? 'lg:w-[76px]' : 'lg:w-[260px]'}
+        ${mobileOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full lg:translate-x-0'}
+      `}>
         
-        {/* 1. Dashboard */}
-        <NavLink
-          to="/admin/dashboard"
-          className={({ isActive }) => `flex items-center px-3 py-2.5 rounded-xl transition ${isActive ? 'bg-brand-orange text-brand-white shadow-md font-bold' : 'text-blue-100 hover:bg-white/10 hover:text-brand-white'}`}
-        >
-          <LayoutDashboard className="w-4 h-4 mr-3 text-brand-green" />
-          <span>Dashboard</span>
-        </NavLink>
-
-        {/* 2. Seven Dedicated Loan Enquiry Pages */}
-        <div className="pt-2">
-          <button
-            onClick={() => setEnquiriesOpen(!enquiriesOpen)}
-            className="w-full flex items-center justify-between px-3 py-2 text-blue-200 hover:text-white hover:bg-white/10 rounded-lg transition"
-          >
-            <span className="text-[11px] font-bold uppercase tracking-wider text-brand-orange">Loan Enquiries</span>
-            {enquiriesOpen ? <ChevronDown className="w-3.5 h-3.5 text-brand-green" /> : <ChevronRight className="w-3.5 h-3.5" />}
-          </button>
-
-          {enquiriesOpen && (
-            <div className="mt-1 space-y-1 pl-1">
-              {ENQUIRY_LINKS.map(link => {
-                const Icon = link.icon;
-                return (
-                  <NavLink
-                    key={link.path}
-                    to={link.path}
-                    className={({ isActive }) => `flex items-center px-3 py-2 rounded-lg transition text-[11px] ${isActive ? 'bg-brand-white text-brand-blue font-bold shadow-sm' : 'text-blue-100 hover:bg-white/10 hover:text-brand-white'}`}
-                  >
-                    <Icon className="w-3.5 h-3.5 mr-2.5 flex-shrink-0 text-brand-green" />
-                    <span className="truncate">{link.name}</span>
-                  </NavLink>
-                );
-              })}
+        {/* Brand Header with FinAdvise Logo and CRM badge */}
+        <div className={`h-20 px-4 border-b border-white/10 flex items-center justify-between ${collapsed ? 'lg:justify-center' : ''}`}>
+          <Link to="/admin/dashboard" onClick={closeMobile} className="flex items-center space-x-3 min-w-0">
+            {/* Official Logo Mark */}
+            <div className="w-10 h-10 rounded-xl bg-[#194B87] flex items-center justify-center text-white font-extrabold text-lg shadow-sm border border-white/15 flex-shrink-0">
+              FA
             </div>
-          )}
-        </div>
-
-        {/* 3. Loan Management */}
-        <div className="pt-2">
-          <button
-            onClick={() => setLoansOpen(!loansOpen)}
-            className="w-full flex items-center justify-between px-3 py-2 text-blue-200 hover:text-white hover:bg-white/10 rounded-lg transition"
-          >
-            <span className="text-[11px] font-bold uppercase tracking-wider text-blue-100">Loan Products</span>
-            {loansOpen ? <ChevronDown className="w-3.5 h-3.5 text-brand-green" /> : <ChevronRight className="w-3.5 h-3.5" />}
-          </button>
-
-          {loansOpen && (
-            <div className="mt-1 space-y-1 pl-1">
-              <NavLink
-                to="/admin/loans"
-                className={({ isActive }) => `flex items-center px-3 py-2 rounded-lg transition ${isActive ? 'bg-brand-white text-brand-blue font-bold' : 'text-blue-100 hover:bg-white/10'}`}
-              >
-                <Layers className="w-3.5 h-3.5 mr-2.5 text-brand-green" />
-                <span>All 7 Loan Products</span>
-              </NavLink>
+            
+            {/* Wordmark with strong typography and CRM badge */}
+            <div className={`truncate ${collapsed ? 'lg:hidden' : ''}`}>
+              <div className="flex items-center">
+                <span className="text-xl font-black text-white tracking-tight leading-tight">FinAdvise</span>
+                <span className="ml-1.5 px-1.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-[#F7901E] bg-[#F7901E]/15 border border-[#F7901E]/30 rounded">
+                  CRM
+                </span>
+              </div>
+              <p className="text-[10px] text-blue-200/80 font-bold tracking-wider uppercase mt-0.5 truncate">
+                Advisory Management
+              </p>
             </div>
-          )}
-        </div>
+          </Link>
 
-        {/* 4. Website CMS Management */}
-        <div className="pt-2">
-          <button
-            onClick={() => setWebsiteOpen(!websiteOpen)}
-            className="w-full flex items-center justify-between px-3 py-2 text-blue-200 hover:text-white hover:bg-white/10 rounded-lg transition"
-          >
-            <span className="text-[11px] font-bold uppercase tracking-wider text-blue-100">Website Content</span>
-            {websiteOpen ? <ChevronDown className="w-3.5 h-3.5 text-brand-green" /> : <ChevronRight className="w-3.5 h-3.5" />}
-          </button>
-
-          {websiteOpen && (
-            <div className="mt-1 space-y-1 pl-1">
-              <NavLink
-                to="/admin/website/home"
-                className={({ isActive }) => `flex items-center px-3 py-2 rounded-lg transition ${isActive ? 'bg-brand-white text-brand-blue font-bold' : 'text-blue-100 hover:bg-white/10'}`}
-              >
-                <span>Home Page CMS</span>
-              </NavLink>
-              <NavLink
-                to="/admin/website/partners"
-                className={({ isActive }) => `flex items-center px-3 py-2 rounded-lg transition ${isActive ? 'bg-brand-white text-brand-blue font-bold' : 'text-blue-100 hover:bg-white/10'}`}
-              >
-                <span>Lending Partners</span>
-              </NavLink>
-              <NavLink
-                to="/admin/website/faqs"
-                className={({ isActive }) => `flex items-center px-3 py-2 rounded-lg transition ${isActive ? 'bg-brand-white text-brand-blue font-bold' : 'text-blue-100 hover:bg-white/10'}`}
-              >
-                <span>FAQs</span>
-              </NavLink>
-              <NavLink
-                to="/admin/website/news"
-                className={({ isActive }) => `flex items-center px-3 py-2 rounded-lg transition ${isActive ? 'bg-brand-white text-brand-blue font-bold' : 'text-blue-100 hover:bg-white/10'}`}
-              >
-                <span>News & Updates</span>
-              </NavLink>
-            </div>
-          )}
-        </div>
-
-        {/* 5. Blogs Management */}
-        <NavLink
-          to="/admin/blogs"
-          className={({ isActive }) => `flex items-center px-3 py-2.5 rounded-xl transition ${isActive ? 'bg-brand-orange text-brand-white font-bold shadow-md' : 'text-blue-100 hover:bg-white/10 hover:text-white'}`}
-        >
-          <FileText className="w-4 h-4 mr-3 text-brand-green" />
-          <span>Blog Management</span>
-        </NavLink>
-
-        {/* 6. Media Library */}
-        <NavLink
-          to="/admin/media"
-          className={({ isActive }) => `flex items-center px-3 py-2.5 rounded-xl transition ${isActive ? 'bg-brand-orange text-brand-white font-bold shadow-md' : 'text-blue-100 hover:bg-white/10 hover:text-white'}`}
-        >
-          <Image className="w-4 h-4 mr-3 text-brand-green" />
-          <span>Media Library</span>
-        </NavLink>
-
-        {/* 7. Settings */}
-        <NavLink
-          to="/admin/settings"
-          className={({ isActive }) => `flex items-center px-3 py-2.5 rounded-xl transition ${isActive ? 'bg-brand-orange text-brand-white font-bold shadow-md' : 'text-blue-100 hover:bg-white/10 hover:text-white'}`}
-        >
-          <Settings className="w-4 h-4 mr-3 text-brand-green" />
-          <span>System Settings</span>
-        </NavLink>
-
-      </div>
-
-      {/* Admin Profile & Logout */}
-      <div className="p-3 border-t border-white/10">
-        <div className="bg-white/10 rounded-xl p-3 flex items-center justify-between">
-          <div className="truncate pr-2">
-            <p className="text-xs font-bold text-white truncate">{admin?.name || 'Administrator'}</p>
-            <p className="text-[10px] text-blue-200 truncate">{admin?.email}</p>
+          {/* Desktop Collapse Toggle */}
+          <div className="hidden lg:flex items-center">
+            <button
+              onClick={() => setCollapsed(!collapsed)}
+              title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+              className="p-1.5 rounded-md text-slate-400 hover:text-white hover:bg-white/10 transition"
+              aria-label="Toggle sidebar width"
+            >
+              <ChevronLeft className={`w-4 h-4 transition-transform duration-200 ${collapsed ? 'rotate-180' : ''}`} />
+            </button>
           </div>
-          <button
-            onClick={logout}
-            title="Log Out"
-            className="p-1.5 rounded-lg text-blue-200 hover:text-brand-orange hover:bg-white/10 transition"
+
+          {/* Mobile Drawer Close Button */}
+          <button 
+            onClick={closeMobile} 
+            className="lg:hidden p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition min-h-[44px] min-w-[44px] flex items-center justify-center"
+            aria-label="Close navigation drawer"
           >
-            <LogOut className="w-4 h-4" />
+            <X className="w-5 h-5" />
           </button>
         </div>
-      </div>
 
-    </aside>
+        {/* Scrollable Nav Items */}
+        <div className="flex-1 overflow-y-auto px-3.5 py-4 space-y-1.5">
+          
+          {/* Section: OVERVIEW */}
+          {(!collapsed || mobileOpen) && (
+            <p className="px-3 pt-1 pb-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+              Overview
+            </p>
+          )}
+
+          {/* 1. Dashboard */}
+          <NavLink
+            to="/admin/dashboard"
+            onClick={closeMobile}
+            title={collapsed ? "Dashboard" : undefined}
+            className={({ isActive }) => navItemClass(isActive)}
+          >
+            <div className="flex items-center min-w-0">
+              <LayoutDashboard className="w-[18px] h-[18px] mr-3 text-blue-400 flex-shrink-0" />
+              <span className={`truncate ${collapsed ? 'lg:hidden' : ''}`}>Dashboard</span>
+            </div>
+          </NavLink>
+
+          {/* 2. Homepage Enquiry Management */}
+          <NavLink
+            to="/admin/enquiries"
+            end
+            onClick={closeMobile}
+            title={collapsed ? `Homepage Enquiries (${unreadCounts.homepage || 0})` : undefined}
+            className={({ isActive }) => navItemClass(isActive)}
+          >
+            <div className="flex items-center min-w-0 pr-1">
+              <MessageSquare className="w-[18px] h-[18px] mr-3 text-emerald-400 flex-shrink-0" />
+              <span className={`truncate ${collapsed ? 'lg:hidden' : ''}`}>Enquiry Management</span>
+            </div>
+            <NotificationBadge count={unreadCounts.homepage} />
+          </NavLink>
+
+          {/* Section: LOAN ENQUIRIES */}
+          <div className="pt-3">
+            {!collapsed || mobileOpen ? (
+              <button
+                onClick={() => setEnquiriesOpen(!enquiriesOpen)}
+                className="w-full flex items-center justify-between px-3 py-1.5 text-slate-400 hover:text-white rounded-md transition text-[11px] font-bold uppercase tracking-wider min-h-[36px]"
+              >
+                <div className="flex items-center space-x-2">
+                  <span>Loan Enquiries</span>
+                  {!enquiriesOpen && totalLoanUnread > 0 && (
+                    <NotificationBadge count={totalLoanUnread} />
+                  )}
+                </div>
+                {enquiriesOpen ? <ChevronDown className="w-3.5 h-3.5 text-slate-400" /> : <ChevronRight className="w-3.5 h-3.5 text-slate-400" />}
+              </button>
+            ) : (
+              <div className="h-px bg-white/10 my-2" />
+            )}
+
+            {(enquiriesOpen || collapsed || mobileOpen) && (
+              <div className={`mt-1 space-y-0.5 ${!collapsed || mobileOpen ? 'pl-1' : ''}`}>
+                {ENQUIRY_LINKS.map(link => {
+                  const Icon = link.icon;
+                  const count = unreadCounts[link.slug] || 0;
+                  return (
+                    <NavLink
+                      key={link.path}
+                      to={link.path}
+                      onClick={closeMobile}
+                      title={collapsed ? `${link.name} (${count})` : undefined}
+                      className={({ isActive }) => navItemClass(isActive)}
+                    >
+                      <div className="flex items-center min-w-0 pr-1">
+                        <Icon className="w-[17px] h-[17px] mr-2.5 text-slate-300 flex-shrink-0 group-hover:text-white" />
+                        <span className={`truncate text-[13.5px] ${collapsed ? 'lg:hidden' : ''}`}>{link.name}</span>
+                      </div>
+                      <NotificationBadge count={count} />
+                    </NavLink>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+        </div>
+
+        {/* User Profile & Logout Area */}
+        <div className="p-3.5 border-t border-white/10 bg-[#0A1E36]/60">
+          {!collapsed || mobileOpen ? (
+            <div className="flex items-center justify-between">
+              <div className="truncate pr-2 min-w-0">
+                <p className="text-[13.5px] font-semibold text-white truncate">{admin?.name || 'Administrator'}</p>
+                <p className="text-[11px] text-slate-400 truncate">{admin?.email || 'admin@finadviseloans.com'}</p>
+              </div>
+              <div className="flex items-center space-x-1">
+                <a
+                  href="http://localhost:5173"
+                  target="_blank"
+                  rel="noreferrer"
+                  title="View Public Website"
+                  className="p-2 rounded-md text-slate-400 hover:text-white hover:bg-white/10 transition"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                </a>
+                <button
+                  onClick={logout}
+                  title="Log Out"
+                  className="p-2 rounded-md text-slate-400 hover:text-red-400 hover:bg-white/10 transition"
+                  aria-label="Log Out"
+                >
+                  <LogOut className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center space-y-2">
+              <button
+                onClick={logout}
+                title="Log Out"
+                className="p-2 rounded-md text-slate-400 hover:text-red-400 hover:bg-white/10 transition"
+                aria-label="Log Out"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+        </div>
+
+      </aside>
+    </>
   );
 };
 

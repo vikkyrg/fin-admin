@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Save, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Save, CheckCircle2, Globe, Layout, Sparkles } from 'lucide-react';
 import { contentService } from '../services/api';
+import { Card, PageHeader, PrimaryButton } from '../components/common/UIComponents';
 
 const WebsiteManager = ({ section = 'home' }) => {
   const [content, setContent] = useState(null);
@@ -26,7 +27,7 @@ const WebsiteManager = ({ section = 'home' }) => {
     setMessage('');
     try {
       await contentService.savePageContent(section, { sections: content });
-      setMessage('Website CMS content successfully updated!');
+      setMessage('Website CMS content successfully saved!');
     } catch (e) {
       alert('Failed to save website content');
     } finally {
@@ -36,31 +37,35 @@ const WebsiteManager = ({ section = 'home' }) => {
 
   return (
     <div className="space-y-6 max-w-4xl">
-      <div>
-        <h1 className="text-2xl font-black text-slate-900 tracking-tight">Website CMS Management</h1>
-        <p className="text-xs text-slate-500 mt-1">Manage public website headlines, hero banner texts, and key sections.</p>
-      </div>
+      <PageHeader
+        title="Homepage CMS Content"
+        subtitle="Manage public website copy, hero banner headlines, badge pill, and value propositions."
+        badge="Content Management"
+      />
 
       {message && (
-        <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center">
-          <CheckCircle2 className="w-4 h-4 mr-2" />
-          <span>{message}</span>
+        <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center shadow-xs">
+          <CheckCircle2 className="w-4 h-4 mr-2 text-emerald-600 flex-shrink-0" />
+          <span className="font-semibold">{message}</span>
         </div>
       )}
 
       {loading ? (
         <div className="py-20 flex justify-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-brand-blue"></div>
+          <div className="w-8 h-8 border-3 border-slate-200 border-t-crm-navy rounded-full animate-spin"></div>
         </div>
       ) : (
-        <form onSubmit={handleSave} className="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200/80 shadow-sm space-y-6 text-xs">
+        <form onSubmit={handleSave} className="space-y-5 text-xs">
           
           {/* Hero Banner CMS */}
-          <div className="space-y-4">
-            <h3 className="text-sm font-bold text-slate-900 pb-2 border-b">Homepage Hero Banner</h3>
+          <Card className="space-y-4">
+            <div className="flex items-center space-x-2 pb-2.5 border-b border-[#E4EAF2]">
+              <Layout className="w-4 h-4 text-crm-navy" />
+              <h3 className="font-bold text-crm-text text-sm">Hero Banner Content</h3>
+            </div>
             
             <div>
-              <label className="block font-bold text-slate-700 mb-1">Top Badge Pill</label>
+              <label className="block font-bold text-slate-700 mb-1">Top Highlight Badge</label>
               <input
                 type="text"
                 value={content?.hero?.badge || ''}
@@ -68,7 +73,8 @@ const WebsiteManager = ({ section = 'home' }) => {
                   ...content,
                   hero: { ...content?.hero, badge: e.target.value }
                 })}
-                className="w-full px-3 py-2 bg-slate-50 border rounded-xl"
+                placeholder="e.g. 100% Impartial Financial Advice"
+                className="w-full px-3 py-2 bg-slate-50 border border-[#E4EAF2] rounded-xl text-xs focus:ring-2 focus:ring-crm-navy focus:outline-none"
               />
             </div>
 
@@ -81,12 +87,12 @@ const WebsiteManager = ({ section = 'home' }) => {
                   ...content,
                   hero: { ...content?.hero, title: e.target.value }
                 })}
-                className="w-full px-3 py-2 bg-slate-50 border rounded-xl"
+                className="w-full px-3 py-2 bg-slate-50 border border-[#E4EAF2] rounded-xl text-xs focus:ring-2 focus:ring-crm-navy focus:outline-none"
               />
             </div>
 
             <div>
-              <label className="block font-bold text-slate-700 mb-1">Hero Subtitle</label>
+              <label className="block font-bold text-slate-700 mb-1">Hero Subtitle / Description</label>
               <textarea
                 rows="3"
                 value={content?.hero?.subtitle || ''}
@@ -94,20 +100,15 @@ const WebsiteManager = ({ section = 'home' }) => {
                   ...content,
                   hero: { ...content?.hero, subtitle: e.target.value }
                 })}
-                className="w-full px-3 py-2 bg-slate-50 border rounded-xl"
+                className="w-full px-3 py-2 bg-slate-50 border border-[#E4EAF2] rounded-xl text-xs focus:ring-2 focus:ring-crm-navy focus:outline-none leading-relaxed"
               />
             </div>
-          </div>
+          </Card>
 
-          <div className="pt-4 border-t flex justify-end">
-            <button
-              type="submit"
-              disabled={saving}
-              className="px-6 py-2.5 bg-brand-blue hover:bg-blue-800 text-white rounded-xl font-bold shadow-md transition flex items-center"
-            >
-              <Save className="w-4 h-4 mr-2" />
-              <span>{saving ? 'Saving Changes...' : 'Save CMS Content'}</span>
-            </button>
+          <div className="flex justify-end pt-2">
+            <PrimaryButton type="submit" loading={saving} icon={Save}>
+              Save CMS Changes
+            </PrimaryButton>
           </div>
 
         </form>

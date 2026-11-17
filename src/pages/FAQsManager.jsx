@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2 } from 'lucide-react';
+import { Plus, Edit, Trash2, HelpCircle, X } from 'lucide-react';
 import { contentService } from '../services/api';
+import { Card, PageHeader, PrimaryButton, SecondaryButton } from '../components/common/UIComponents';
 
 const FAQsManager = () => {
   const [faqs, setFaqs] = useState([]);
   const [editingFaq, setEditingFaq] = useState(null);
   const [isNew, setIsNew] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const fetchFaqs = () => {
     contentService.getFAQs()
@@ -21,6 +23,7 @@ const FAQsManager = () => {
 
   const handleSave = async (e) => {
     e.preventDefault();
+    setSaving(true);
     try {
       if (isNew) {
         await contentService.createFAQ(editingFaq);
@@ -32,6 +35,8 @@ const FAQsManager = () => {
       fetchFaqs();
     } catch (e) {
       alert('Failed to save FAQ');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -47,56 +52,70 @@ const FAQsManager = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight">FAQ Management</h1>
-          <p className="text-xs text-slate-500 mt-1">Manage FAQs appearing on the public homepage and knowledge centre.</p>
-        </div>
-        <button
-          onClick={() => {
-            setIsNew(true);
-            setEditingFaq({ question: '', answer: '', category: 'General', isPublished: true });
-          }}
-          className="px-4 py-2 bg-brand-orange text-white rounded-xl text-xs font-bold shadow-md"
-        >
-          Add New FAQ
-        </button>
-      </div>
+      <PageHeader
+        title="FAQ Management"
+        subtitle="Manage frequently asked questions appearing across the public portal and knowledge centre."
+        badge="Knowledge Base"
+        action={
+          <PrimaryButton
+            icon={Plus}
+            onClick={() => {
+              setIsNew(true);
+              setEditingFaq({ question: '', answer: '', category: 'General', isPublished: true });
+            }}
+          >
+            Add New FAQ
+          </PrimaryButton>
+        }
+      />
 
-      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
-        <div className="divide-y divide-slate-100 text-xs">
-          {faqs.map(faq => (
-            <div key={faq._id} className="p-4 flex items-start justify-between hover:bg-slate-50">
-              <div className="space-y-1 max-w-2xl">
-                <span className="text-[10px] font-bold text-brand-blue uppercase bg-blue-50 px-2 py-0.5 rounded">
-                  {faq.category}
-                </span>
-                <h4 className="font-bold text-slate-900 text-sm">{faq.question}</h4>
-                <p className="text-slate-600 text-xs leading-relaxed">{faq.answer}</p>
-              </div>
-              <div className="flex space-x-2">
-                <button
-                  onClick={() => { setIsNew(false); setEditingFaq(faq); }}
-                  className="p-1.5 text-slate-500 hover:text-brand-blue"
-                >
-                  <Edit className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => handleDelete(faq._id)}
-                  className="p-1.5 text-slate-400 hover:text-red-500"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
+      <Card noPadding className="overflow-hidden">
+        <div className="divide-y divide-[#E4EAF2] text-xs">
+          {faqs.length === 0 ? (
+            <div className="p-8 text-center text-slate-400">
+              No FAQs found. Click 'Add New FAQ' above.
             </div>
-          ))}
+          ) : (
+            faqs.map(faq => (
+              <div key={faq._id} className="p-4 sm:p-5 flex items-start justify-between hover:bg-slate-50/80 transition-colors">
+                <div className="space-y-1.5 max-w-3xl pr-4">
+                  <span className="text-[10px] font-bold text-crm-navy uppercase bg-blue-50 px-2 py-0.5 rounded border border-blue-100">
+                    {faq.category}
+                  </span>
+                  <h4 className="font-bold text-crm-text text-sm">{faq.question}</h4>
+                  <p className="text-slate-600 text-xs leading-relaxed">{faq.answer}</p>
+                </div>
+                <div className="flex space-x-1.5 flex-shrink-0">
+                  <button
+                    onClick={() => { setIsNew(false); setEditingFaq(faq); }}
+                    className="p-1.5 text-slate-500 hover:text-crm-navy hover:bg-slate-100 rounded-lg transition"
+                    title="Edit FAQ"
+                  >
+                    <Edit className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(faq._id)}
+                    className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition"
+                    title="Delete FAQ"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
         </div>
-      </div>
+      </Card>
 
       {editingFaq && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl p-6 max-w-lg w-full space-y-4 text-xs">
-            <h3 className="text-base font-bold text-slate-900">{isNew ? 'New FAQ' : 'Edit FAQ'}</h3>
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl p-6 max-w-lg w-full space-y-4 text-xs shadow-2xl border border-[#E4EAF2]">
+            <div className="flex items-center justify-between pb-2 border-b border-[#E4EAF2]">
+              <h3 className="text-sm font-bold text-crm-text">{isNew ? 'New FAQ' : 'Edit FAQ'}</h3>
+              <button onClick={() => setEditingFaq(null)} className="text-slate-400 hover:text-slate-600">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
             <form onSubmit={handleSave} className="space-y-3">
               <div>
                 <label className="block font-bold mb-1">Question</label>
@@ -105,7 +124,7 @@ const FAQsManager = () => {
                   required
                   value={editingFaq.question}
                   onChange={(e) => setEditingFaq({ ...editingFaq, question: e.target.value })}
-                  className="w-full px-3 py-2 bg-slate-50 border rounded-xl"
+                  className="w-full px-3 py-2 bg-slate-50 border border-[#E4EAF2] rounded-xl text-xs focus:ring-2 focus:ring-crm-navy focus:outline-none"
                 />
               </div>
               <div>
@@ -115,16 +134,16 @@ const FAQsManager = () => {
                   required
                   value={editingFaq.answer}
                   onChange={(e) => setEditingFaq({ ...editingFaq, answer: e.target.value })}
-                  className="w-full px-3 py-2 bg-slate-50 border rounded-xl"
+                  className="w-full px-3 py-2 bg-slate-50 border border-[#E4EAF2] rounded-xl text-xs focus:ring-2 focus:ring-crm-navy focus:outline-none leading-relaxed"
                 />
               </div>
               <div className="pt-2 flex justify-end space-x-2">
-                <button type="button" onClick={() => setEditingFaq(null)} className="px-4 py-2 bg-slate-100 rounded-xl font-bold">
+                <SecondaryButton onClick={() => setEditingFaq(null)}>
                   Cancel
-                </button>
-                <button type="submit" className="px-5 py-2 bg-brand-blue text-white rounded-xl font-bold">
-                  Save
-                </button>
+                </SecondaryButton>
+                <PrimaryButton type="submit" loading={saving}>
+                  Save FAQ
+                </PrimaryButton>
               </div>
             </form>
           </div>

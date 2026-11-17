@@ -62,11 +62,14 @@ export const dashboardService = {
 
 // Enquiries
 export const enquiryService = {
+  getHomepageEnquiries: (params) => api.get('/enquiries/admin', { params: { ...params, source: 'homepage' } }),
   getEnquiriesByLoanType: (loanType, params) => api.get(`/enquiries/admin/by-type/${loanType}`, { params }),
   getEnquiryById: (id) => api.get(`/enquiries/admin/${id}`),
   updateStatus: (id, status) => api.patch(`/enquiries/admin/${id}/status`, { status }),
   addNote: (id, note) => api.post(`/enquiries/admin/${id}/notes`, { note }),
   deleteEnquiry: (id) => api.delete(`/enquiries/admin/${id}`),
+  getUnreadCounts: () => api.get('/enquiries/admin/unread-counts'),
+  markAsRead: (category, cutoffTime) => api.patch('/enquiries/admin/mark-read', { category, cutoffTime }),
 };
 
 // Loans
@@ -76,17 +79,6 @@ export const loanService = {
   createLoan: (data) => api.post('/loans/admin', data),
   updateLoan: (slug, data) => api.put(`/loans/admin/${slug}`, data),
   togglePublish: (slug) => api.patch(`/loans/admin/${slug}/publish`),
-};
-
-// Blogs
-export const blogService = {
-  getBlogs: (params) => api.get('/blogs?admin=true', { params }),
-  createBlog: (data) => api.post('/blogs/admin', data),
-  updateBlog: (id, data) => api.put(`/blogs/admin/${id}`, data),
-  deleteBlog: (id) => api.delete(`/blogs/admin/${id}`),
-  togglePublish: (id) => api.patch(`/blogs/admin/${id}/publish`),
-  getCategories: () => api.get('/blogs/categories'),
-  createCategory: (data) => api.post('/blogs/admin/categories', data),
 };
 
 // Content & CMS
